@@ -5,6 +5,12 @@
 docker compose up -d --build
 ```
 
+## ERD
+![ERD](ERD.png)
+
+## API Doc
+[https://www.postman.com/gold-eclipse-18650/workspace/deptech-test-backend/collection/26140093-7062186d-1c17-44e5-86dd-5ca110930a52?action=share&creator=26140093&active-environment=26140093-a55638b6-e14e-4faf-a0f6-5aaeba4fab6a](https://www.postman.com/gold-eclipse-18650/workspace/deptech-test-backend/collection/26140093-7062186d-1c17-44e5-86dd-5ca110930a52?action=share&creator=26140093&active-environment=26140093-a55638b6-e14e-4faf-a0f6-5aaeba4fab6a)
+
 ## To Do
 
 ### Deploy
@@ -18,8 +24,8 @@ docker compose up -d --build
 - [ ] Setup HTTPS
 
 ### Documentation
-- [ ] Write ERD
-- [ ] Write API Doc
+- [x] Draw ERD
+- [x] Write API Doc
 - [x] Write how to run app
 - [ ] Record demo video
 
@@ -62,5 +68,5 @@ docker compose up -d --build
 - [x] List product
 
 ### Transaction Feature (need auth)
-- [ ] Process transaction
-- [ ] List transaction
+- [x] Create transaction
+- [x] List transaction
