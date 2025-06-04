@@ -104,7 +104,7 @@ func (u *userUsecase) GetUserByID(ctx context.Context, req dto.GetUserByIDReq) (
 }
 
 func (u *userUsecase) UpdateUser(ctx context.Context, req dto.UpdateUserReq) (*dto.UpdateUserRes, error) {
-	user, err := u.userRepository.GetByID(ctx, req.ID)
+	_, err := u.userRepository.GetByID(ctx, req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (u *userUsecase) UpdateUser(ctx context.Context, req dto.UpdateUserReq) (*d
 		return nil, err
 	}
 
-	user = &model.User{
+	user := &model.User{
 		ID:          req.ID,
 		FirstName:   req.FirstName,
 		LastName:    req.LastName,
