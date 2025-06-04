@@ -30,3 +30,7 @@ type GetUserByIDRes struct {
 	DateOfBirth string `json:"date_of_birth"`
 	Gender      string `json:"gender"`
 }
+
+type UpdateUserReq struct {
+	ID uint `param:"id" validate:"required"`
+}
