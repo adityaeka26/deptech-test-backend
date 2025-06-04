@@ -5,6 +5,16 @@
 ### Deploy
 - [x] Setup database (mysql) & object storage (minio) using docker
 - [x] Setup Dockerfile
+- [ ] Deploy to VPS using docker
+- [ ] Setup DNS
+- [ ] Setup nginx
+- [ ] Setup HTTPS
+
+### Documentation
+- [ ] Write ERD
+- [ ] Write API Doc
+- [ ] Write how to run app
+- [ ] Record demo video
 
 ### Setup Repository
 - [x] Init project
@@ -12,6 +22,11 @@
 - [x] Setup go validator
 - [x] Test database connection
 - [ ] Test object storage connection
+- [x] Design User model
+- [x] Design Category model
+- [x] Design Product model
+- [x] Design Transaction model
+- [x] Design Transaction Item model
 - [ ] Setup authentication & authorization mechanism (JWT)
 
 ### User Feature
@@ -37,6 +52,6 @@
 - [ ] Delete product
 - [ ] List product
 
-### Transaction Feature
+### Transaction Feature (need auth)
 - [ ] Process transaction
 - [ ] List transaction
