@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/adityaeka26/deptech-test-backend/cmd/rest"
 	"github.com/adityaeka26/deptech-test-backend/config"
 	"github.com/adityaeka26/deptech-test-backend/internal/middleware"
@@ -41,6 +43,11 @@ func Execute() {
 	}
 
 	minio, err := minio.NewMinio(config)
+	if err != nil {
+		panic(err)
+	}
+
+	err = minio.CreateBucket(context.Background(), "products")
 	if err != nil {
 		panic(err)
 	}

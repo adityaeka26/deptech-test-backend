@@ -52,3 +52,14 @@ func (m *Minio) Upload(ctx context.Context, bucketName string, fileHeader *multi
 func (m *Minio) GeneratePresignedURL(ctx context.Context, bucketName, path string, expiry time.Duration) (*url.URL, error) {
 	return m.minioClient.PresignedGetObject(context.Background(), bucketName, path, expiry, make(url.Values))
 }
+
+func (m *Minio) CreateBucket(ctx context.Context, bucketName string) error {
+	exists, err := m.minioClient.BucketExists(ctx, bucketName)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return m.minioClient.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{})
+	}
+	return nil
+}

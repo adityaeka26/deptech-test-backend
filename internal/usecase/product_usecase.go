@@ -151,6 +151,7 @@ func (u *productUsecase) UpdateProduct(ctx context.Context, req dto.UpdateProduc
 	// fmt.Println(req.Image.Filename)
 
 	product := &model.Product{
+		ID:          req.ID,
 		Name:        req.Name,
 		Description: req.Description,
 		ImagePath:   req.Image.Filename,

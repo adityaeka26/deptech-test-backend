@@ -23,12 +23,12 @@ services:
       - ./docker-data/minio:/data
     command: server /data --console-address ":9001"
     restart: unless-stopped
-  # app:
-  #   build: .
-  #   ports:
-  #     - "3000:3000"
-  #   env_file:
-  #     - .env.docker
-  #   depends_on:
-  #     - db
-  #   restart: unless-stopped
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.docker
+    depends_on:
+      - db
+    restart: unless-stopped
