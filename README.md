@@ -16,12 +16,8 @@ docker compose up -d --build
 ### Deploy
 - [x] Setup database (mysql) using docker compose
 - [x] Setup object storage (minio) using docker compose
-- [ ] Setup redis using docker compose
+- [x] Setup redis using docker compose
 - [x] Setup Dockerfile
-- [ ] Deploy to VPS using docker
-- [ ] Setup DNS
-- [ ] Setup nginx
-- [ ] Setup HTTPS
 
 ### Documentation
 - [x] Draw ERD
@@ -51,7 +47,7 @@ docker compose up -d --build
 - [x] Delete user
 - [x] List user
 - [x] Login user
-- [ ] Logout user
+- [x] Logout user
 
 ### Category Feature (need auth)
 - [x] Create category
