@@ -11,6 +11,7 @@ import (
 	"github.com/adityaeka26/deptech-test-backend/internal/usecase"
 	"github.com/adityaeka26/deptech-test-backend/pkg/minio"
 	"github.com/adityaeka26/deptech-test-backend/pkg/mysql"
+	"github.com/adityaeka26/deptech-test-backend/pkg/redis"
 )
 
 func Execute() {
@@ -52,18 +53,23 @@ func Execute() {
 		panic(err)
 	}
 
+	redis, err := redis.NewRedis(config)
+	if err != nil {
+		panic(err)
+	}
+
 	userRepository := repository.NewUserRepository(mysql.Db)
 	categoryRepository := repository.NewCategoryRepository(mysql.Db)
 	productRepository := repository.NewProductRepository(mysql.Db)
 	transactionRepository := repository.NewTransactionRepository(mysql.Db)
 	transactionItemRepository := repository.NewTransactionItemRepository(mysql.Db)
 
-	userUsecase := usecase.NewUserUsecase(config, mysql.Db, userRepository)
+	userUsecase := usecase.NewUserUsecase(config, mysql.Db, redis, userRepository)
 	categoryUsecase := usecase.NewCategoryUsecase(config, mysql.Db, categoryRepository)
 	productUsecase := usecase.NewProductUsecase(config, mysql.Db, minio, productRepository)
 	transactionUsecase := usecase.NewTransactionUsecase(config, mysql.Db, productRepository, transactionRepository, transactionItemRepository)
 
-	middleware := middleware.NewMiddleware()
+	middleware := middleware.NewMiddleware(redis)
 
 	err = rest.ServeRest(config, userUsecase, categoryUsecase, productUsecase, transactionUsecase, middleware)
 	if err != nil {

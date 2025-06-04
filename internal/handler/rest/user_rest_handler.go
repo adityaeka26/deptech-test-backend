@@ -1,6 +1,8 @@
 package rest
 
 import (
+	"strings"
+
 	"github.com/adityaeka26/deptech-test-backend/config"
 	"github.com/adityaeka26/deptech-test-backend/internal/dto"
 	"github.com/adityaeka26/deptech-test-backend/internal/middleware"
@@ -28,6 +30,7 @@ func InitUserRestHandler(app *fiber.App, userUsecase usecase.UserUsecase, middle
 	app.Delete("/v1/user/:id", middleware.ValidateToken(config.JwtPublicKey), handler.DeleteUser)
 	app.Get("/v1/user", handler.GetAllUsers)
 	app.Post("/v1/user/login", handler.LoginUser)
+	app.Post("/v1/user/logout", middleware.ValidateToken(config.JwtPublicKey), handler.LogoutUser)
 }
 
 func (h *userRestHandler) CreateUser(c *fiber.Ctx) error {
@@ -118,4 +121,21 @@ func (h *userRestHandler) LoginUser(c *fiber.Ctx) error {
 		return helper.RespError(c, err)
 	}
 	return helper.RespSuccess(c, res, "login user success")
+}
+
+func (h *userRestHandler) LogoutUser(c *fiber.Ctx) error {
+	req := &dto.LogoutUserReq{}
+	token := strings.TrimPrefix(c.Get("Authorization"), "Bearer ")
+	if len(token) <= 0 {
+		return helper.RespError(c, pkgError.UnauthorizedError("unauthorized"))
+	}
+	req.Token = token
+	if err := h.validator.Validate(req); err != nil {
+		return helper.RespError(c, err)
+	}
+
+	if err := h.userUsecase.LogoutUser(c.UserContext(), *req); err != nil {
+		return helper.RespError(c, err)
+	}
+	return helper.RespSuccess(c, nil, "logout user success")
 }

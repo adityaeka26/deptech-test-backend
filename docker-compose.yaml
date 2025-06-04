@@ -23,12 +23,18 @@ services:
       - ./docker-data/minio:/data
     command: server /data --console-address ":9001"
     restart: unless-stopped
-  app:
-    build: .
+  redis:
+    image: redis:alpine
     ports:
-      - "3000:3000"
-    env_file:
-      - .env.docker
-    depends_on:
-      - db
+      - "6379:6379"
+    command: ["redis-server", "--requirepass", "deptech"]
     restart: unless-stopped
+  # app:
+  #   build: .
+  #   ports:
+  #     - "3000:3000"
+  #   env_file:
+  #     - .env.docker
+  #   depends_on:
+  #     - db
+  #   restart: unless-stopped

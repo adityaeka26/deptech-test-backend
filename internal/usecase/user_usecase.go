@@ -9,6 +9,7 @@ import (
 	"github.com/adityaeka26/deptech-test-backend/internal/model"
 	"github.com/adityaeka26/deptech-test-backend/internal/repository"
 	"github.com/adityaeka26/deptech-test-backend/pkg/helper"
+	"github.com/adityaeka26/deptech-test-backend/pkg/redis"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -17,6 +18,7 @@ import (
 type userUsecase struct {
 	config         *config.EnvConfig
 	db             *gorm.DB
+	redis          *redis.Redis
 	userRepository repository.UserRepository
 }
 
@@ -28,13 +30,15 @@ type UserUsecase interface {
 	GetAllUsers(ctx context.Context) ([]dto.GetUserByIDRes, error)
 
 	LoginUser(ctx context.Context, req dto.LoginUserReq) (*dto.LoginUserRes, error)
+	LogoutUser(ctx context.Context, req dto.LogoutUserReq) error
 }
 
-func NewUserUsecase(config *config.EnvConfig, db *gorm.DB, userRepository repository.UserRepository) UserUsecase {
+func NewUserUsecase(config *config.EnvConfig, db *gorm.DB, redis *redis.Redis, userRepository repository.UserRepository) UserUsecase {
 	return &userUsecase{
 		config:         config,
 		userRepository: userRepository,
 		db:             db,
+		redis:          redis,
 	}
 }
 
@@ -209,4 +213,13 @@ func (u *userUsecase) LoginUser(ctx context.Context, req dto.LoginUserReq) (*dto
 	return &dto.LoginUserRes{
 		Token: *token,
 	}, nil
+}
+
+func (u *userUsecase) LogoutUser(ctx context.Context, req dto.LogoutUserReq) error {
+	err := u.redis.RedisClient.Set(ctx, req.Token, "logout", time.Hour*24).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

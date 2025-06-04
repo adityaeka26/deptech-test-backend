@@ -18,6 +18,8 @@ type EnvConfig struct {
 	MinioAccessKey string `mapstructure:"MINIO_ACCESS_KEY"`
 	MinioSecretKey string `mapstructure:"MINIO_SECRET_KEY"`
 	MinioUseSSL    bool   `mapstructure:"MINIO_USE_SSL"`
+	RedisAddress   string `mapstructure:"REDIS_ADDRESS"`
+	RedisPassword  string `mapstructure:"REDIS_PASSWORD"`
 }
 
 func Load(filename string) (*EnvConfig, error) {

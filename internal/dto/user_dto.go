@@ -62,3 +62,7 @@ type LoginUserReq struct {
 type LoginUserRes struct {
 	Token string `json:"token"`
 }
+
+type LogoutUserReq struct {
+	Token string `validate:"required"`
+}
