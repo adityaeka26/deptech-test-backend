@@ -14,6 +14,8 @@ type userRepository struct {
 
 type UserRepository interface {
 	GetByID(ctx context.Context, id uint) (*model.User, error)
+	GetByEmail(ctx context.Context, email string) (*model.User, error)
+	GetAll(ctx context.Context) ([]model.User, error)
 
 	BeginTx(ctx context.Context) (UserTxRepository, error)
 }
@@ -32,6 +34,22 @@ func (r *userRepository) GetByID(ctx context.Context, id uint) (*model.User, err
 	return &user, nil
 }
 
+func (r *userRepository) GetByEmail(ctx context.Context, email string) (*model.User, error) {
+	var user model.User
+	if err := r.mysql.Db.WithContext(ctx).Where("email = ?", email).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *userRepository) GetAll(ctx context.Context) ([]model.User, error) {
+	var users []model.User
+	if err := r.mysql.Db.WithContext(ctx).Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 func (r *userRepository) BeginTx(ctx context.Context) (UserTxRepository, error) {
 	tx := r.mysql.Db.WithContext(ctx).Begin()
 	return &userTxRepository{
@@ -46,6 +64,8 @@ type userTxRepository struct {
 
 type UserTxRepository interface {
 	Create(ctx context.Context, user *model.User) error
+	Update(ctx context.Context, user *model.User) error
+	Delete(ctx context.Context, user *model.User) error
 
 	Commit() error
 	Rollback() error
@@ -53,6 +73,14 @@ type UserTxRepository interface {
 
 func (r *userTxRepository) Create(ctx context.Context, user *model.User) error {
 	return r.tx.WithContext(ctx).Create(user).Error
+}
+
+func (r *userTxRepository) Update(ctx context.Context, user *model.User) error {
+	return r.tx.WithContext(ctx).Save(user).Error
+}
+
+func (r *userTxRepository) Delete(ctx context.Context, user *model.User) error {
+	return r.tx.WithContext(ctx).Delete(user).Error
 }
 
 func (r *userTxRepository) Commit() error {
