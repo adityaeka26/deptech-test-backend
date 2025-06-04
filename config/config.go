@@ -12,6 +12,8 @@ type EnvConfig struct {
 	MySqlPassword string `mapstructure:"MYSQL_PASSWORD"`
 	MySqlDbName   string `mapstructure:"MYSQL_DB_NAME"`
 	MySqlSslMode  string `mapstructure:"MYSQL_SSL_MODE"`
+	JwtPrivateKey string `mapstructure:"JWT_PRIVATE_KEY"`
+	JwtPublicKey  string `mapstructure:"JWT_PUBLIC_KEY"`
 }
 
 func Load(filename string) (*EnvConfig, error) {
