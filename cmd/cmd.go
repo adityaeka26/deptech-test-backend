@@ -45,13 +45,13 @@ func Execute() {
 		panic(err)
 	}
 
-	userRepository := repository.NewUserRepository(mysql)
-	categoryRepository := repository.NewCategoryRepository(mysql)
-	productRepository := repository.NewProductRepository(mysql)
+	userRepository := repository.NewUserRepository(mysql.Db)
+	categoryRepository := repository.NewCategoryRepository(mysql.Db)
+	productRepository := repository.NewProductRepository(mysql.Db)
 
-	userUsecase := usecase.NewUserUsecase(config, userRepository)
-	categoryUsecase := usecase.NewCategoryUsecase(config, categoryRepository)
-	productUsecase := usecase.NewProductUsecase(config, minio, productRepository)
+	userUsecase := usecase.NewUserUsecase(config, mysql.Db, userRepository)
+	categoryUsecase := usecase.NewCategoryUsecase(config, mysql.Db, categoryRepository)
+	productUsecase := usecase.NewProductUsecase(config, mysql.Db, minio, productRepository)
 
 	middleware := middleware.NewMiddleware()
 

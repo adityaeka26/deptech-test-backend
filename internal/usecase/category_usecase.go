@@ -7,10 +7,12 @@ import (
 	"github.com/adityaeka26/deptech-test-backend/internal/dto"
 	"github.com/adityaeka26/deptech-test-backend/internal/model"
 	"github.com/adityaeka26/deptech-test-backend/internal/repository"
+	"gorm.io/gorm"
 )
 
 type categoryUsecase struct {
 	config             *config.EnvConfig
+	db                 *gorm.DB
 	categoryRepository repository.CategoryRepository
 }
 
@@ -22,36 +24,29 @@ type CategoryUsecase interface {
 	DeleteCategory(ctx context.Context, req dto.DeleteCategoryReq) error
 }
 
-func NewCategoryUsecase(config *config.EnvConfig, categoryRepository repository.CategoryRepository) CategoryUsecase {
+func NewCategoryUsecase(config *config.EnvConfig, db *gorm.DB, categoryRepository repository.CategoryRepository) CategoryUsecase {
 	return &categoryUsecase{
 		config:             config,
+		db:                 db,
 		categoryRepository: categoryRepository,
 	}
 }
 
 func (u *categoryUsecase) CreateCategory(ctx context.Context, req dto.CreateCategoryReq) (*dto.CreateCategoryRes, error) {
-	txRepo, err := u.categoryRepository.BeginTx(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			txRepo.Rollback()
-			panic(err)
-		}
-	}()
+	tx := u.db.WithContext(ctx).Begin()
+	categoryRepositoryTx := u.categoryRepository.WithTx(tx)
 
 	category := &model.Category{
 		Name:        req.Name,
 		Description: req.Description,
 	}
 
-	if err := txRepo.Create(ctx, category); err != nil {
-		txRepo.Rollback()
+	if err := categoryRepositoryTx.Create(ctx, category); err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
-	if err := txRepo.Commit(); err != nil {
+	if err := tx.Commit().Error; err != nil {
 		return nil, err
 	}
 
@@ -94,16 +89,8 @@ func (u *categoryUsecase) GetAllCategories(ctx context.Context) ([]dto.GetCatego
 }
 
 func (u *categoryUsecase) UpdateCategory(ctx context.Context, req dto.UpdateCategoryReq) (*dto.UpdateCategoryRes, error) {
-	txRepo, err := u.categoryRepository.BeginTx(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			txRepo.Rollback()
-			panic(err)
-		}
-	}()
+	tx := u.db.WithContext(ctx).Begin()
+	categoryRepositoryTx := u.categoryRepository.WithTx(tx)
 
 	category := &model.Category{
 		ID:          req.ID,
@@ -111,13 +98,13 @@ func (u *categoryUsecase) UpdateCategory(ctx context.Context, req dto.UpdateCate
 		Description: req.Description,
 	}
 
-	if err := txRepo.Update(ctx, category); err != nil {
-		txRepo.Rollback()
+	if err := categoryRepositoryTx.Update(ctx, category); err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
-	if err := txRepo.Commit(); err != nil {
-		txRepo.Rollback()
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
@@ -129,24 +116,16 @@ func (u *categoryUsecase) UpdateCategory(ctx context.Context, req dto.UpdateCate
 }
 
 func (u *categoryUsecase) DeleteCategory(ctx context.Context, req dto.DeleteCategoryReq) error {
-	txRepo, err := u.categoryRepository.BeginTx(ctx)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			txRepo.Rollback()
-			panic(err)
-		}
-	}()
+	tx := u.db.WithContext(ctx).Begin()
+	categoryRepositoryTx := u.categoryRepository.WithTx(tx)
 
-	if err := txRepo.Delete(ctx, &model.Category{ID: req.ID}); err != nil {
-		txRepo.Rollback()
+	if err := categoryRepositoryTx.Delete(ctx, &model.Category{ID: req.ID}); err != nil {
+		tx.Rollback()
 		return err
 	}
 
-	if err := txRepo.Commit(); err != nil {
-		txRepo.Rollback()
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		return err
 	}
 

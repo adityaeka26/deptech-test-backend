@@ -4,39 +4,39 @@ import (
 	"context"
 
 	"github.com/adityaeka26/deptech-test-backend/internal/model"
-	"github.com/adityaeka26/deptech-test-backend/pkg/mysql"
 	"gorm.io/gorm"
 )
 
 type categoryRepository struct {
-	mysql *mysql.MySql
+	db *gorm.DB
 }
 
 type CategoryRepository interface {
+	WithTx(tx *gorm.DB) CategoryRepository
+
 	GetByID(ctx context.Context, id uint) (*model.Category, error)
-	GetByEmail(ctx context.Context, email string) (*model.Category, error)
 	GetAll(ctx context.Context) ([]model.Category, error)
 
-	BeginTx(ctx context.Context) (CategoryTxRepository, error)
+	Create(ctx context.Context, category *model.Category) error
+	Update(ctx context.Context, category *model.Category) error
+	Delete(ctx context.Context, category *model.Category) error
 }
 
-func NewCategoryRepository(mysql *mysql.MySql) CategoryRepository {
+func NewCategoryRepository(db *gorm.DB) CategoryRepository {
 	return &categoryRepository{
-		mysql: mysql,
+		db: db,
+	}
+}
+
+func (r *categoryRepository) WithTx(tx *gorm.DB) CategoryRepository {
+	return &categoryRepository{
+		db: tx,
 	}
 }
 
 func (r *categoryRepository) GetByID(ctx context.Context, id uint) (*model.Category, error) {
 	var category model.Category
-	if err := r.mysql.Db.WithContext(ctx).Where("id = ?", id).First(&category).Error; err != nil {
-		return nil, err
-	}
-	return &category, nil
-}
-
-func (r *categoryRepository) GetByEmail(ctx context.Context, email string) (*model.Category, error) {
-	var category model.Category
-	if err := r.mysql.Db.WithContext(ctx).Where("email = ?", email).First(&category).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("id = ?", id).First(&category).Error; err != nil {
 		return nil, err
 	}
 	return &category, nil
@@ -44,49 +44,28 @@ func (r *categoryRepository) GetByEmail(ctx context.Context, email string) (*mod
 
 func (r *categoryRepository) GetAll(ctx context.Context) ([]model.Category, error) {
 	var categories []model.Category
-	if err := r.mysql.Db.WithContext(ctx).Find(&categories).Error; err != nil {
+	if err := r.db.WithContext(ctx).Find(&categories).Error; err != nil {
 		return nil, err
 	}
 	return categories, nil
 }
 
-func (r *categoryRepository) BeginTx(ctx context.Context) (CategoryTxRepository, error) {
-	tx := r.mysql.Db.WithContext(ctx).Begin()
-	return &categoryTxRepository{
-		tx: tx,
-	}, nil
+func (r *categoryRepository) Create(ctx context.Context, category *model.Category) error {
+	return r.db.WithContext(ctx).Create(category).Error
 }
 
-// Transactional
-type categoryTxRepository struct {
-	tx *gorm.DB
+func (r *categoryRepository) Update(ctx context.Context, category *model.Category) error {
+	return r.db.WithContext(ctx).Save(category).Error
 }
 
-type CategoryTxRepository interface {
-	Create(ctx context.Context, category *model.Category) error
-	Update(ctx context.Context, category *model.Category) error
-	Delete(ctx context.Context, category *model.Category) error
-
-	Commit() error
-	Rollback() error
+func (r *categoryRepository) Delete(ctx context.Context, category *model.Category) error {
+	return r.db.WithContext(ctx).Delete(category).Error
 }
 
-func (r *categoryTxRepository) Create(ctx context.Context, category *model.Category) error {
-	return r.tx.WithContext(ctx).Create(category).Error
+func (r *categoryRepository) Commit() error {
+	return r.db.Commit().Error
 }
 
-func (r *categoryTxRepository) Update(ctx context.Context, category *model.Category) error {
-	return r.tx.WithContext(ctx).Save(category).Error
-}
-
-func (r *categoryTxRepository) Delete(ctx context.Context, category *model.Category) error {
-	return r.tx.WithContext(ctx).Delete(category).Error
-}
-
-func (r *categoryTxRepository) Commit() error {
-	return r.tx.Commit().Error
-}
-
-func (r *categoryTxRepository) Rollback() error {
-	return r.tx.Rollback().Error
+func (r *categoryRepository) Rollback() error {
+	return r.db.Rollback().Error
 }

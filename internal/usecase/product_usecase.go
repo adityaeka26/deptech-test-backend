@@ -9,10 +9,12 @@ import (
 	"github.com/adityaeka26/deptech-test-backend/internal/model"
 	"github.com/adityaeka26/deptech-test-backend/internal/repository"
 	"github.com/adityaeka26/deptech-test-backend/pkg/minio"
+	"gorm.io/gorm"
 )
 
 type productUsecase struct {
 	config            *config.EnvConfig
+	db                *gorm.DB
 	minio             *minio.Minio
 	productRepository repository.ProductRepository
 }
@@ -25,29 +27,22 @@ type ProductUsecase interface {
 	DeleteProduct(ctx context.Context, req dto.DeleteProductReq) error
 }
 
-func NewProductUsecase(config *config.EnvConfig, minio *minio.Minio, productRepository repository.ProductRepository) ProductUsecase {
+func NewProductUsecase(config *config.EnvConfig, db *gorm.DB, minio *minio.Minio, productRepository repository.ProductRepository) ProductUsecase {
 	return &productUsecase{
 		config:            config,
+		db:                db,
 		minio:             minio,
 		productRepository: productRepository,
 	}
 }
 
 func (u *productUsecase) CreateProduct(ctx context.Context, req dto.CreateProductReq) (*dto.CreateProductRes, error) {
-	txRepo, err := u.productRepository.BeginTx(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			txRepo.Rollback()
-			panic(err)
-		}
-	}()
+	tx := u.db.WithContext(ctx).Begin()
+	productRepositoryTx := u.productRepository.WithTx(tx)
 
-	err = u.minio.Upload(ctx, "products", req.Image)
+	err := u.minio.Upload(ctx, "products", req.Image)
 	if err != nil {
-		txRepo.Rollback()
+		tx.Rollback()
 		return nil, err
 	}
 
@@ -61,18 +56,18 @@ func (u *productUsecase) CreateProduct(ctx context.Context, req dto.CreateProduc
 		Stock:       req.Stock,
 	}
 
-	if err := txRepo.Create(ctx, product); err != nil {
-		txRepo.Rollback()
+	if err := productRepositoryTx.Create(ctx, product); err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
 	imageUrl, err := u.minio.GeneratePresignedURL(ctx, "products", product.ImagePath, time.Minute*5)
 	if err != nil {
-		txRepo.Rollback()
+		tx.Rollback()
 		return nil, err
 	}
 
-	if err := txRepo.Commit(); err != nil {
+	if err := tx.Commit().Error; err != nil {
 		return nil, err
 	}
 
@@ -144,20 +139,12 @@ func (u *productUsecase) UpdateProduct(ctx context.Context, req dto.UpdateProduc
 		return nil, err
 	}
 
-	txRepo, err := u.productRepository.BeginTx(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			txRepo.Rollback()
-			panic(err)
-		}
-	}()
+	tx := u.db.WithContext(ctx).Begin()
+	productRepositoryTx := u.productRepository.WithTx(tx)
 
 	err = u.minio.Upload(ctx, "products", req.Image)
 	if err != nil {
-		txRepo.Rollback()
+		tx.Rollback()
 		return nil, err
 	}
 
@@ -171,18 +158,18 @@ func (u *productUsecase) UpdateProduct(ctx context.Context, req dto.UpdateProduc
 		Stock:       req.Stock,
 	}
 
-	if err := txRepo.Update(ctx, product); err != nil {
-		txRepo.Rollback()
+	if err := productRepositoryTx.Update(ctx, product); err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
 	imageUrl, err := u.minio.GeneratePresignedURL(ctx, "products", product.ImagePath, time.Minute*5)
 	if err != nil {
-		txRepo.Rollback()
+		tx.Rollback()
 		return nil, err
 	}
 
-	if err := txRepo.Commit(); err != nil {
+	if err := tx.Commit().Error; err != nil {
 		return nil, err
 	}
 
@@ -197,24 +184,16 @@ func (u *productUsecase) UpdateProduct(ctx context.Context, req dto.UpdateProduc
 }
 
 func (u *productUsecase) DeleteProduct(ctx context.Context, req dto.DeleteProductReq) error {
-	txRepo, err := u.productRepository.BeginTx(ctx)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			txRepo.Rollback()
-			panic(err)
-		}
-	}()
+	tx := u.db.WithContext(ctx).Begin()
+	productRepositoryTx := u.productRepository.WithTx(tx)
 
-	if err := txRepo.Delete(ctx, &model.Product{ID: req.ID}); err != nil {
-		txRepo.Rollback()
+	if err := productRepositoryTx.Delete(ctx, &model.Product{ID: req.ID}); err != nil {
+		tx.Rollback()
 		return err
 	}
 
-	if err := txRepo.Commit(); err != nil {
-		txRepo.Rollback()
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		return err
 	}
 

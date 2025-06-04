@@ -11,10 +11,12 @@ import (
 	"github.com/adityaeka26/deptech-test-backend/pkg/helper"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type userUsecase struct {
 	config         *config.EnvConfig
+	db             *gorm.DB
 	userRepository repository.UserRepository
 }
 
@@ -28,28 +30,21 @@ type UserUsecase interface {
 	LoginUser(ctx context.Context, req dto.LoginUserReq) (*dto.LoginUserRes, error)
 }
 
-func NewUserUsecase(config *config.EnvConfig, userRepository repository.UserRepository) UserUsecase {
+func NewUserUsecase(config *config.EnvConfig, db *gorm.DB, userRepository repository.UserRepository) UserUsecase {
 	return &userUsecase{
 		config:         config,
 		userRepository: userRepository,
+		db:             db,
 	}
 }
 
 func (u *userUsecase) CreateUser(ctx context.Context, req dto.CreateUserReq) (*dto.CreateUserRes, error) {
-	txRepo, err := u.userRepository.BeginTx(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			txRepo.Rollback()
-			panic(err)
-		}
-	}()
+	tx := u.db.WithContext(ctx).Begin()
+	userRepositoryTx := u.userRepository.WithTx(tx)
 
 	dob, err := time.Parse("2006-01-02", req.DateOfBirth)
 	if err != nil {
-		txRepo.Rollback()
+		tx.Rollback()
 		return nil, err
 	}
 
@@ -67,13 +62,13 @@ func (u *userUsecase) CreateUser(ctx context.Context, req dto.CreateUserReq) (*d
 		Gender:      req.Gender,
 	}
 
-	if err := txRepo.Create(ctx, &user); err != nil {
-		txRepo.Rollback()
+	if err := userRepositoryTx.Create(ctx, &user); err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
-	if err := txRepo.Commit(); err != nil {
-		txRepo.Rollback()
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
@@ -109,20 +104,12 @@ func (u *userUsecase) UpdateUser(ctx context.Context, req dto.UpdateUserReq) (*d
 		return nil, err
 	}
 
-	txRepo, err := u.userRepository.BeginTx(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			txRepo.Rollback()
-			panic(err)
-		}
-	}()
+	tx := u.db.WithContext(ctx).Begin()
+	userRepositoryTx := u.userRepository.WithTx(tx)
 
 	dob, err := time.Parse("2006-01-02", req.DateOfBirth)
 	if err != nil {
-		txRepo.Rollback()
+		tx.Rollback()
 		return nil, err
 	}
 
@@ -141,13 +128,13 @@ func (u *userUsecase) UpdateUser(ctx context.Context, req dto.UpdateUserReq) (*d
 		Gender:      req.Gender,
 	}
 
-	if err := txRepo.Update(ctx, user); err != nil {
-		txRepo.Rollback()
+	if err := userRepositoryTx.Update(ctx, user); err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
-	if err := txRepo.Commit(); err != nil {
-		txRepo.Rollback()
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
@@ -162,24 +149,16 @@ func (u *userUsecase) UpdateUser(ctx context.Context, req dto.UpdateUserReq) (*d
 }
 
 func (u *userUsecase) DeleteUser(ctx context.Context, req dto.DeleteUserReq) error {
-	txRepo, err := u.userRepository.BeginTx(ctx)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			txRepo.Rollback()
-			panic(err)
-		}
-	}()
+	tx := u.db.WithContext(ctx).Begin()
+	userRepositoryTx := u.userRepository.WithTx(tx)
 
-	if err := txRepo.Delete(ctx, &model.User{ID: req.ID}); err != nil {
-		txRepo.Rollback()
+	if err := userRepositoryTx.Delete(ctx, &model.User{ID: req.ID}); err != nil {
+		tx.Rollback()
 		return err
 	}
 
-	if err := txRepo.Commit(); err != nil {
-		txRepo.Rollback()
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		return err
 	}
 
