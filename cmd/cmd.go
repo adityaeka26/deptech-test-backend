@@ -31,6 +31,8 @@ func Execute() {
 		&model.User{},
 		&model.Category{},
 		&model.Product{},
+		&model.Transaction{},
+		&model.TransactionItem{},
 	)
 	if err != nil {
 		panic(err)
