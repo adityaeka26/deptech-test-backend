@@ -3,7 +3,9 @@
 ## To Do
 
 ### Deploy
-- [x] Setup database (mysql) & object storage (minio) using docker
+- [x] Setup database (mysql) using docker compose
+- [x] Setup object storage (minio) using docker compose
+- [ ] Setup redis using docker compose
 - [x] Setup Dockerfile
 - [ ] Deploy to VPS using docker
 - [ ] Setup DNS
@@ -27,15 +29,17 @@
 - [x] Design Product model
 - [x] Design Transaction model
 - [x] Design Transaction Item model
-- [ ] Setup authentication & authorization mechanism (JWT)
+- [x] Encrypt password (bcrypt)
+- [x] Setup authentication middleware (JWT)
+- [ ] Setup logging
 
 ### User Feature
 - [x] Create user
-- [ ] Read user
-- [ ] Update user
-- [ ] Delete user
-- [ ] List user
-- [ ] Login user
+- [x] Read user
+- [x] Update user
+- [x] Delete user
+- [x] List user
+- [x] Login user
 - [ ] Logout user
 
 ### Category Feature (need auth)
