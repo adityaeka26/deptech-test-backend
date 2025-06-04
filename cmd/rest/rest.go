@@ -12,10 +12,22 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func ServeRest(config *config.EnvConfig, userUsecase usecase.UserUsecase, middleware middleware.Middleware) error {
+func ServeRest(
+	config *config.EnvConfig,
+	userUsecase usecase.UserUsecase,
+	categoryUsecase usecase.CategoryUsecase,
+	productUsecase usecase.ProductUsecase,
+	middleware middleware.Middleware,
+) error {
 	app := fiber.New()
 
 	rest.InitUserRestHandler(app, userUsecase, middleware, config, &pkgValidator.XValidator{
+		Validator: &validator.Validate{},
+	})
+	rest.InitCategoryRestHandler(app, categoryUsecase, middleware, config, &pkgValidator.XValidator{
+		Validator: &validator.Validate{},
+	})
+	rest.InitProductRestHandler(app, productUsecase, middleware, config, &pkgValidator.XValidator{
 		Validator: &validator.Validate{},
 	})
 
