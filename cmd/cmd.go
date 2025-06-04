@@ -48,14 +48,17 @@ func Execute() {
 	userRepository := repository.NewUserRepository(mysql.Db)
 	categoryRepository := repository.NewCategoryRepository(mysql.Db)
 	productRepository := repository.NewProductRepository(mysql.Db)
+	transactionRepository := repository.NewTransactionRepository(mysql.Db)
+	transactionItemRepository := repository.NewTransactionItemRepository(mysql.Db)
 
 	userUsecase := usecase.NewUserUsecase(config, mysql.Db, userRepository)
 	categoryUsecase := usecase.NewCategoryUsecase(config, mysql.Db, categoryRepository)
 	productUsecase := usecase.NewProductUsecase(config, mysql.Db, minio, productRepository)
+	transactionUsecase := usecase.NewTransactionUsecase(config, mysql.Db, productRepository, transactionRepository, transactionItemRepository)
 
 	middleware := middleware.NewMiddleware()
 
-	err = rest.ServeRest(config, userUsecase, categoryUsecase, productUsecase, middleware)
+	err = rest.ServeRest(config, userUsecase, categoryUsecase, productUsecase, transactionUsecase, middleware)
 	if err != nil {
 		panic(err)
 	}

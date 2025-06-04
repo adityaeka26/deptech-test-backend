@@ -5,6 +5,7 @@ import (
 
 	"github.com/adityaeka26/deptech-test-backend/internal/model"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type productRepository struct {
@@ -15,6 +16,7 @@ type ProductRepository interface {
 	WithTx(tx *gorm.DB) ProductRepository
 
 	GetByID(ctx context.Context, id uint) (*model.Product, error)
+	GetByIDLock(ctx context.Context, id uint) (*model.Product, error)
 	GetAll(ctx context.Context) ([]model.Product, error)
 
 	Create(ctx context.Context, product *model.Product) error
@@ -37,6 +39,17 @@ func (r *productRepository) WithTx(tx *gorm.DB) ProductRepository {
 func (r *productRepository) GetByID(ctx context.Context, id uint) (*model.Product, error) {
 	var product model.Product
 	if err := r.db.WithContext(ctx).Where("id = ?", id).Preload("Category").First(&product).Error; err != nil {
+		return nil, err
+	}
+	return &product, nil
+}
+
+func (r *productRepository) GetByIDLock(ctx context.Context, id uint) (*model.Product, error) {
+	var product model.Product
+	if err := r.db.WithContext(ctx).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("id = ?", id).
+		First(&product).Error; err != nil {
 		return nil, err
 	}
 	return &product, nil

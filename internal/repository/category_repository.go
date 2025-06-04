@@ -61,11 +61,3 @@ func (r *categoryRepository) Update(ctx context.Context, category *model.Categor
 func (r *categoryRepository) Delete(ctx context.Context, category *model.Category) error {
 	return r.db.WithContext(ctx).Delete(category).Error
 }
-
-func (r *categoryRepository) Commit() error {
-	return r.db.Commit().Error
-}
-
-func (r *categoryRepository) Rollback() error {
-	return r.db.Rollback().Error
-}

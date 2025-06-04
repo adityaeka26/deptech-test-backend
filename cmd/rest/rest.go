@@ -17,6 +17,7 @@ func ServeRest(
 	userUsecase usecase.UserUsecase,
 	categoryUsecase usecase.CategoryUsecase,
 	productUsecase usecase.ProductUsecase,
+	transactionUsecase usecase.TransactionUsecase,
 	middleware middleware.Middleware,
 ) error {
 	app := fiber.New()
@@ -28,6 +29,9 @@ func ServeRest(
 		Validator: &validator.Validate{},
 	})
 	rest.InitProductRestHandler(app, productUsecase, middleware, config, &pkgValidator.XValidator{
+		Validator: &validator.Validate{},
+	})
+	rest.InitTransactionRestHandler(app, transactionUsecase, middleware, config, &pkgValidator.XValidator{
 		Validator: &validator.Validate{},
 	})
 
